@@ -107,10 +107,11 @@ if __name__ == "__main__":
         user_id = message.from_user.id
         user_states[user_id] = {"step": "delete"}
 
-        markup = types.ReplyKeyboardMarkup(row_width=2)
+        markups = types.ReplyKeyboardMarkup(row_width=2)
 
         btn1 = types.KeyboardButton('yes')
-        btn1 = types.KeyboardButton('no')
+        btn2 = types.KeyboardButton('no')
+        markups.add(btn1, btn2)
 
         bot.reply_to(message, "Are you sure you want to delete your automatic check-in and pre-recorded message ?", reply_markup=markups)
         
@@ -162,7 +163,7 @@ if __name__ == "__main__":
                     contacts=user_state["contacts"]
                 )
 
-                bot.send_message(message.chat.id, "Your check-in is set up! You'll be asked for your password every {} days.".format(user_state["interval"]))
+                bot.send_message(message.chat.id, "Your check-in is set up! You'll be asked for your password every {} days. If you want to remove this check-in, you can use the command /delete at any time.".format(user_state["interval"]))
                 del user_states[user_id]  
             else:
                 if "contacts" not in user_state:
@@ -175,7 +176,7 @@ if __name__ == "__main__":
 
         elif current_step == "delete":
             if message.text.lower() == "yes":
-                switches = get_switches_user_db(user_id)
+                switches = db.get_switches_user(user_id)
                 for switch in switches:
                     db.remove_switch(switch["ID"])
                     db.remove_contact_from_switch(switch["ID"])
