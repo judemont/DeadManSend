@@ -2,13 +2,15 @@ import requests
 import telebot
 from telebot import types
 import os
-import sqlite3
-import threading
 import time
 import re
+import db
+import hashlib
+from dotenv import load_dotenv, dotenv_values 
 
 
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+
+
 START_MESSAGE = """
 DeadManSend is a free, open-source Telegram bot designed to ensure your safety and peace of mind. Set a custom check-in interval, and if you don’t respond with a predefined password within the specified time, DeadManSend will automatically send a pre-defined alert message to your chosen contacts via email.
 Key Features:
@@ -31,76 +33,7 @@ For more information, support, or to contribute, contact me at @judemont or visi
 """
 
 # Thread-local storage for the database connection
-thread_local = threading.local()
 
-def get_db_connection():
-    if not hasattr(thread_local, 'connection'):
-        thread_local.connection = sqlite3.connect('database.db', check_same_thread=False)
-    return thread_local.connection
-
-def create_table():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS switches (
-            ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            message TEXT,
-            check_interval INTEGER,
-            last_check INTEGER
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS contacts (
-            ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            switch_id INTEGER,
-            email TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-
-
-def add_switch_db(user_id, message, check_interval, last_check):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO switches (user_id, message, check_interval, last_check) VALUES (?, ?, ?, ?)", (user_id, message, check_interval, last_check))
-    conn.commit()
-    switch_id = cursor.lastrowid
-    return switch_id
-
-
-def remove_switch_db(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM switches WHERE ID=?", (id,))
-    conn.commit()
-
-def add_contact_db(switch_id, email):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO contacts (switch_id, email) VALUES (?,?)", (switch_id, email))
-    conn.commit()
-
-def remove_contact_db(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM contacts WHERE ID=?", (id,))
-    conn.commit()
-
-
-def get_switches_user_db(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM switches WHERE user_id=?", (user_id,))
-    return cursor.fetchall()
-
-def get_contacts_switch_db(switch_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM contacts WHERE switch_id=?", (switch_id,))
-    return cursor.fetchall()
 
 
 # def set_interval(func, sec):
@@ -117,19 +50,46 @@ def is_email_valid(email):
     return valid
 
 
-if __name__ == "__main__":
-    create_table()
 
+def hash_password(password):
+    pwd_salt = password + HASH_SALT
+    hashed = hashlib.sha256(pwd_salt.encode())
+    has_hex = hashed.hexdigest()
+
+def save_check_in(user_id, interval, password, alert_message, contacts):
+    password_hshd = hash_password(password)
+    switch_id = db.add_switch(user_id, alert_message, interval, int(time.time()), password_hshd)
+    
+    
+    for contact in contacts:
+        db.add_contact(switch_id, contact)
+
+
+if __name__ == "__main__":
+    load_dotenv() 
+
+    BOT_TOKEN = os.getenv('BOT_TOKEN')
+    HASH_SALT = os.getenv('HASH_SALT')
+
+
+    db.create_table()
     bot = telebot.TeleBot(BOT_TOKEN)
     user_states = {}
     
     
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
+        user_id = message.from_user.id
+        switches = db.get_switches_user(user_id)
+
         markup = types.ReplyKeyboardMarkup(row_width=2)
-        newCheckBtn = types.KeyboardButton('/new')
-        myChecksBtn = types.KeyboardButton('/list')
-        markup.add(newCheckBtn, myChecksBtn)
+
+        if len(switches) == 0:
+            btn1 = types.KeyboardButton('/new')
+        else:
+            btn1 = types.KeyboardButton('/delete')
+
+        markup.add(btn1)
         bot.send_message(message.chat.id, START_MESSAGE, reply_markup=markup)
 
     
@@ -140,6 +100,20 @@ if __name__ == "__main__":
 
         bot.reply_to(message, "What verification interval (number of days) ? ")
 
+
+
+    @bot.message_handler(commands=['delete'])
+    def user_new(message):
+        user_id = message.from_user.id
+        user_states[user_id] = {"step": "delete"}
+
+        markup = types.ReplyKeyboardMarkup(row_width=2)
+
+        btn1 = types.KeyboardButton('yes')
+        btn1 = types.KeyboardButton('no')
+
+        bot.reply_to(message, "Are you sure you want to delete your automatic check-in and pre-recorded message ?", reply_markup=markups)
+        
 
 
     @bot.message_handler(func=lambda message: True)
@@ -158,19 +132,21 @@ if __name__ == "__main__":
                     raise ValueError
                 user_state["interval"] = interval_days
                 user_state["step"] = "password"
-                bot.reply_to(message, "Set a predefined password for verification (you'll need to enter it at each check-in):")
+                bot.send_message(message.chat.id, "Set a predefined password for verification (you'll need to enter it at each check-in):")
             except ValueError:
                 bot.reply_to(message, "Please enter a valid number of days (e.g., 1, 3, 7):")
 
         elif current_step == "password":
             user_state["password"] = message.text
+            time.sleep(1.2)
+            bot.delete_message(message.chat.id, message.message_id)
             user_state["step"] = "message"
-            bot.reply_to(message, "Enter the alert message to send to your contacts if you miss a check-in:")
+            bot.send_message(message.chat.id, "Enter the alert message to send to your contacts if you miss a check-in:")
 
         elif current_step == "message":
             user_state["alert_message"] = message.text
             user_state["step"] = "contacts"
-            bot.reply_to(message, "Add your emergency contacts email. Send one contact email per message. Send 'done' when finished:")
+            bot.send_message(message.chat.id, "Add your emergency contacts email. Send one contact email per message. Send 'done' when finished:")
 
         elif current_step == "contacts":
             if message.text.lower() == "done":
@@ -186,7 +162,7 @@ if __name__ == "__main__":
                     contacts=user_state["contacts"]
                 )
 
-                bot.reply_to(message, "Your check-in is set up! You'll be asked for your password every {} days.".format(user_state["interval"]))
+                bot.send_message(message.chat.id, "Your check-in is set up! You'll be asked for your password every {} days.".format(user_state["interval"]))
                 del user_states[user_id]  
             else:
                 if "contacts" not in user_state:
@@ -197,18 +173,19 @@ if __name__ == "__main__":
                     user_state["contacts"].append(message.text)
                     bot.reply_to(message, "Contact added. Send another contact email or 'done' to finish:")
 
+        elif current_step == "delete":
+            if message.text.lower() == "yes":
+                switches = get_switches_user_db(user_id)
+                for switch in switches:
+                    db.remove_switch(switch["ID"])
+                    db.remove_contact_from_switch(switch["ID"])
+                bot.send_message(message.chat.id, "Done !")
 
+            elif message.text.lower() == "no":
+                bot.send_message(message.chat.id, "Ok.")
 
-    def save_check_in(user_id, interval, password, alert_message, contacts):
-  
-
-        switch_id = add_switch_db(user_id, alert_message, interval, int(time.time()))
+                
         
-        
-        for contact in contacts:
-            add_contact_db(switch_id, contact)
-   
-
 
 
 
