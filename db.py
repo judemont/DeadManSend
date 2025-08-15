@@ -45,9 +45,17 @@ def add_switch(user_id, message, check_interval, last_check, password):
     return switch_id
 
 
-def remove_switch(id):
+def remove_switch(id, hashed_password):
     conn = get_connection()
     cursor = conn.cursor()
+
+    cursor.execute("SELECT password FROM switches WHERE ID=?", (id,))
+    switch =  cursor.fetchall()[0]
+    switch_password = switch["password"]
+    
+    if switch_password != hashed_password:
+        return False
+
     cursor.execute("DELETE FROM switches WHERE ID=?", (id,))
     conn.commit()
 
@@ -57,16 +65,38 @@ def add_contact(switch_id, email):
     cursor.execute("INSERT INTO contacts (switch_id, email) VALUES (?,?)", (switch_id, email))
     conn.commit()
 
-def remove_contact(id):
+def remove_contact(id, hashed_password):
     conn = get_connection()
     cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM contacts WHERE ID=?", (id,))
+    contact = cursor.fetchall()[0]
+    switch_id = contact["switch_id"]
+
+
+    cursor.execute("SELECT password FROM switches WHERE ID=?", (switch_id,))
+    switch = cursor.fetchall()[0]
+    switch_password = switch["password"]
+    
+    if switch_password != hashed_password:
+        return False
+
     cursor.execute("DELETE FROM contacts WHERE ID=?", (id,))
     conn.commit()
 
 
-def remove_contact_from_switch(switch_id):
+def remove_contact_from_switch(switch_id, hashed_password):
     conn = get_connection()
     cursor = conn.cursor()
+
+
+    cursor.execute("SELECT password FROM switches WHERE ID=?", (switch_id,))
+    switch = cursor.fetchall()[0]
+    switch_password = switch["password"]
+    
+    if switch_password != hashed_password:
+        return False
+
     cursor.execute("DELETE FROM contacts WHERE switch_id=?", (switch_id,))
     conn.commit()
 
