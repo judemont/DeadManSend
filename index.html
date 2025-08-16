@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeadmanSend - Secure Digital Legacy Protection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4c1d95;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: "🛡️";
+            font-size: 1.2rem;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4c1d95;
+            border: 2px solid #4c1d95;
+        }
+
+        .btn-outline:hover {
+            background: #4c1d95;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 29, 149, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4c1d95, #7c3aed);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3c1a7a, #6d28d9);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 29, 149, 0.4);
+        }
+
+        main {
+            margin-top: 80px;
+            padding: 3rem 0;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        .hero-cta {
+            margin-top: 2rem;
+        }
+
+        .hero-cta .btn {
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+        }
+
+        .features {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin: 3rem 0;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            transition: transform 0.3s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .feature p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .how-it-works {
+            text-align: center;
+            color: white;
+            margin: 4rem 0;
+        }
+
+        .how-it-works h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #4c1d95, #7c3aed);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin: 0 auto 1rem;
+        }
+
+        .step h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .step p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .open-source {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            margin: 3rem 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .open-source h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .open-source p {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        footer {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem 0;
+            }
+
+            .badges {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">DeadmanSend</div>
+                <div class="auth-buttons">
+                    <a href="#signin" class="btn btn-outline">Sign In</a>
+                    <a href="register/" class="btn btn-primary">Register</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="hero">
+                <h1>Secure Digital Legacy Protection</h1>
+                <p>Automatically send critical messages to your trusted contacts when you can't. Privacy-first,
+                    open-source, and completely free forever.</p>
+                <div class="badges">
+                    <span class="badge">🔒 End-to-End Encrypted</span>
+                    <span class="badge">🌐 Open Source</span>
+                    <span class="badge">🛡️ Privacy First</span>
+                    <span class="badge">💯 100% Free</span>
+                </div>
+                <div class="hero-cta">
+                    <a href="register/" class="btn btn-primary">Get Started (100% Free)</a>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="container">
+                    <h2
+                        style="text-align: center; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: #1e293b;">
+                        Why Choose DeadmanSend?</h2>
+                    <div class="features-grid">
+                        <div class="feature">
+                            <span class="feature-icon">🔐</span>
+                            <h3>Military-Grade Security</h3>
+                            <p>Your messages are encrypted with AES-256 encryption. Even we can't read your sensitive
+                                information.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">👁️</span>
+                            <h3>Zero Knowledge Privacy</h3>
+                            <p>We never store your passwords or message contents. Your data remains completely private.
+                            </p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">⏰</span>
+                            <h3>Flexible Timing</h3>
+                            <p>Set custom check-in intervals from hours to months. You control when messages are sent.
+                            </p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">📱</span>
+                            <h3>Multiple Contacts</h3>
+                            <p>Send different messages to different people. Family, lawyers, friends - each gets what
+                                they need.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🔓</span>
+                            <h3>Open Source</h3>
+                            <p>Full transparency. Audit our code, contribute improvements, or host it yourself.</p>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">🌍</span>
+                            <h3>Global Reliability</h3>
+                            <p>Redundant servers worldwide ensure your messages are delivered when they need to be.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="how-it-works">
+                <h2>How It Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Setup Your Messages</h3>
+                        <p>Create encrypted messages for your trusted contacts. Add passwords, documents, or important
+                            information.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Set Check-in Schedule</h3>
+                        <p>Choose how often you want to confirm you're okay. Daily, weekly, monthly - you decide.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Regular Check-ins</h3>
+                        <p>We'll send you secure links to confirm you're active. Quick click, enter password, done.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h3>Automatic Delivery</h3>
+                        <p>If you miss check-ins, your messages are automatically sent to your designated contacts.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="open-source">
+                <h2>Transparent & Trustworthy</h2>
+                <p>DeadmanSend is completely open source and entirely free to use. No hidden fees, no premium tiers, no
+                    limitations. We believe privacy tools should be accessible to everyone.</p>
+                <div
+                    style="display: flex; gap: 1rem; justify-content: center; align-items: center; margin: 2rem 0; flex-wrap: wrap;">
+                    <a href="#" class="btn btn-primary">View on GitHub</a>
+                    <div
+                        style="display: flex; align-items: center; gap: 1rem; background: rgba(255, 165, 0, 0.1); padding: 1rem 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 165, 0, 0.3);">
+                        <span style="font-size: 1.5rem;">₿</span>
+                        <div style="text-align: left;">
+                            <div style="font-weight: 600; color: #1e293b; font-size: 0.9rem;">Support Development</div>
+                            <div style="font-size: 0.8rem; color: #64748b; font-family: monospace;">
+                                bc1qexample...donation</div>
+                        </div>
+                        <button onclick="copyBitcoinAddress()" class="btn"
+                            style="font-size: 0.8rem; padding: 0.5rem 1rem; background: #f59e0b; color: white; border: none;">Copy</button>
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; color: #64748b; margin-top: 1rem;">Your donations help us maintain servers
+                    and continue development. Thank you for supporting privacy tools!</p>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 DeadmanSend. Open source digital legacy protection.</p>
+            <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.9rem;">Secure • Private • Reliable</p>
+        </div>
+    </footer>
+
+    <script>
+        // Copy Bitcoin address functionality
+        function copyBitcoinAddress() {
+            const address = "bc1qexample...donation";
+            navigator.clipboard.writeText(address).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = "Copied!";
+                button.style.background = "#10b981";
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = "#f59e0b";
+                }, 2000);
+            }).catch(() => {
+                alert("Bitcoin address: " + address);
+            });
+        }
+
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add subtle parallax effect to hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            if (hero) {
+                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+        });
+
+        // Animate features on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe feature cards
+        document.querySelectorAll('.feature, .step').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+
+</html>
