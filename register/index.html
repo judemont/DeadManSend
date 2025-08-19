@@ -339,8 +339,8 @@
     <header>
         <div class="container">
             <nav>
-                <a href="/" class="logo">DeadmanSend</a>
-                <a href="/signin" class="auth-link">Already have an account? Sign In</a>
+                <a href="../" class="logo">DeadmanSend</a>
+                <a href="../signin" class="auth-link">Already have an account? Sign In</a>
             </nav>
         </div>
     </header>
@@ -395,10 +395,6 @@
                     </button>
                 </form>
 
-                <div class="privacy-note">
-                    <strong>🔒 Your Privacy Matters</strong>
-                    We use zero-knowledge encryption. Your password never leaves your device in plain text.
-                </div>
             </div>
         </div>
     </main>
@@ -655,7 +651,7 @@
 
                         // alert('Account created successfully!');
                         // Redirect to sign in or dashboard
-                        window.location.href = '/dashboard';
+                        window.location.href = '../dashboard';
                     } catch (error) {
                         console.error('Error:', error);
                         alert('An error occurred. Please try again.');
