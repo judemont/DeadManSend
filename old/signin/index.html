@@ -444,7 +444,7 @@
                         <div class="error-message" id="passwordError"></div>
                     </div>
 
-                    <div class="form-options">
+                    <div style="display: none;" class="form-options">
                         <label class="remember-me">
                             <input type="checkbox" id="rememberMe" name="rememberMe">
                             Remember me
@@ -500,7 +500,7 @@
 
         // State management
         let failedAttempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 5;
 
         // Toggle password visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
@@ -582,7 +582,8 @@
         });
 
         // Form submission
-        form.addEventListener('submit', function(e) {
+       // Form submission
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             // Check if account is locked
@@ -618,45 +619,65 @@
                 submitText.style.display = 'none';
                 loadingSpinner.style.display = 'flex';
 
-                // Simulate login process
-                setTimeout(() => {
+                try {
+                    // Send credentials to server
+                    const response = await fetch('../api/signin.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-type': 'application/json; charset=UTF-8'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password, 
+                            rememberMe: rememberMe
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Login failed');
+                    }
+
+                    // Success - redirect to dashboard
+                    alert('Successfully signed in! Redirecting to dashboard...');
+
+                    // Store user preference if "remember me" is checked
+                    if (rememberMe) {
+                        sessionStorage.setItem('rememberedUser', email);
+                    } else {
+                        sessionStorage.removeItem('rememberedUser');
+                    }
+
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard';
+
+                } catch (error) {
+                    console.error('Error:', error);
+
+                    // Failed login
+                    failedAttempts++;
+
+                    if (failedAttempts >= maxAttempts) {
+                        showError('password', 'Account temporarily locked due to multiple failed attempts');
+                        loginAttempts.style.display = 'block';
+                    } else {
+                        showError('password', error.message || `Invalid email or password. ${maxAttempts - failedAttempts} attempts remaining.`);
+                    }
+
+                    // Clear password field
+                    passwordInput.value = '';
+                    passwordInput.focus();
+
+                } finally {
                     // Reset form state
                     submitBtn.disabled = false;
                     submitText.style.display = 'inline';
                     loadingSpinner.style.display = 'none';
-
-                    // Simulate authentication
-                    // In a real app, you would send the credentials to your server
-                    const simulateSuccess = Math.random() > 0.3; // 70% success rate for demo
-
-                    if (simulateSuccess) {
-                        // Store user preference
-                        if (rememberMe) {
-                            sessionStorage.setItem('rememberedUser', email);
-                        }
-
-                        // Success - redirect to dashboard
-                        alert('Successfully signed in! Redirecting to dashboard...');
-                        // window.location.href = '/dashboard';
-                        
-                    } else {
-                        // Failed login
-                        failedAttempts++;
-                        
-                        if (failedAttempts >= maxAttempts) {
-                            showError('password', 'Account temporarily locked due to multiple failed attempts');
-                            loginAttempts.style.display = 'block';
-                        } else {
-                            showError('password', `Invalid email or password. ${maxAttempts - failedAttempts} attempts remaining.`);
-                        }
-                        
-                        // Clear password field
-                        passwordInput.value = '';
-                        passwordInput.focus();
-                    }
-                }, 2000);
+                }
             }
         });
+
 
         // Reset failed attempts after some time (in real app, this would be server-controlled)
         setInterval(() => {

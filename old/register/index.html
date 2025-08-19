@@ -626,13 +626,8 @@
                         submitText.style.display = 'inline';
                         loadingSpinner.style.display = 'none';
 
-                        // Generate a random salt
-                        const salt = window.crypto.getRandomValues(new Uint8Array(16));
+                        let hashedPassword = password; // No fronted hashing for now.
 
-                        // Hash the password with the salt
-                        let hashedPassword = await hashPassword(password, salt);
-
-                        // Send both the hashed password and the salt to the server
                         const response = await fetch('../api/register.php', {
                             method: 'POST',
                             headers: {
@@ -641,7 +636,6 @@
                             body: JSON.stringify({
                                 email: email,
                                 password: hashedPassword,
-                                salt: Array.from(salt).map(b => b.toString(16).padStart(2, "0")).join("")
                             })
                         });
 
