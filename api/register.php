@@ -11,12 +11,13 @@ $data = json_decode($json, true);
 
 $email = $data["email"];
 $password = $data["password"];
+$salt = $data["salt"];
 
 $hashed_password = hashPassword($password);
 
 
 $db = new Database;
-$db->query("INSERT INTO dms_users (email, password) VALUES (?, ?)", [$email, $hashed_password]);
+$db->query("INSERT INTO dms_users (email, password, salt) VALUES (?, ?, ?)", [$email, $hashed_password, $salt]);
 $user_id = $db->getLastInsertedID();
 
 
